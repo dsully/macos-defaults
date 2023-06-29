@@ -1,0 +1,50 @@
+[package]
+authors = [ "Dan Sully <dan+github@sully.org>" ]
+build = "build.rs"
+categories = [
+    "command-line-utilities",
+    "config",
+    "os::macos-apis",
+]
+description = "Defaults setting for macOS"
+edition = "2021"
+keywords = [ "macos", "user", "defaults", "declarative", "yaml" ]
+license = "MIT"
+name = "macos-defaults"
+readme = "README.md"
+repository = "https://github.com/dsully/macos-defaults"
+version = "0.1.0"
+
+[dependencies]
+camino = "1.1.4"
+clap = { version = "~4.3.8", features = [
+    "cargo",
+    "color",
+    "derive",
+    "suggestions",
+    "wrap_help",
+] }
+clap-verbosity-flag = "2.0.1"
+clap_complete = "4.3.1"
+color-eyre = "0.6.2"
+colored = "2.0.0"
+dirs = "5.0.1"
+displaydoc = "0.2.4"
+duct = "0.13.6"
+env_logger = "0.10.0"
+hex = "0.4.3"
+itertools = "0.11.0"
+log = "0.4.19"
+plist = "1.4.3"
+serde = { version = "1.0.164", features = [ "derive" ] }
+serde_yaml = "0.9.22"
+shadow-rs = { version = "0.23.0", default-features = false }
+sysinfo = "0.29.2"
+thiserror = "1.0.40"
+yaml-rust = "0.4.5"
+
+[build-dependencies]
+shadow-rs = { version = "0.23.0", default-features = false }
+
+[dev-dependencies]
+assert_cli = "~0.6.3"

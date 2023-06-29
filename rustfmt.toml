@@ -1,0 +1,7 @@
+# Unstable
+# blank_lines_lower_bound = 1
+# imports_granularity = "Module"
+
+edition = "2021"
+max_width = 160
+use_field_init_shorthand = true
