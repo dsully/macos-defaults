@@ -9,6 +9,9 @@ check:
 format:
     @cargo fmt --all
 
+format-check:
+    @cargo fmt --all -- --check
+
 lint:
     @cargo clippy --all -- -D clippy::dbg-macro -D warnings
 
