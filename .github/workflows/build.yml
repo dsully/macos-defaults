@@ -26,15 +26,27 @@ jobs:
           toolchain: stable
 
       - uses: swatinem/rust-cache@v2
+      - uses: extractions/setup-just@v1
 
       - name: Versions
         run: |
           git version
           cargo version
 
+      - name: Spell Check
+        uses: crate-ci/typos@master
+        with:
+          files: .
+
+      - name: Format Check
+        run: just format-check
+
+      - name: Clippy
+        run: just lint
+
       - name: Build
         run: |
           cargo build
 
-      - name: Test {{ name }}
+      - name: Test
         run: cargo test
