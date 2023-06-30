@@ -25,6 +25,8 @@ jobs:
           components: clippy, rustfmt
           toolchain: stable
 
+      - uses: swatinem/rust-cache@v2
+
       - name: Versions
         run: |
           git version
