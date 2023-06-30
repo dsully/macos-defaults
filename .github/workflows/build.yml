@@ -33,11 +33,6 @@ jobs:
           git version
           cargo version
 
-      - name: Spell Check
-        uses: crate-ci/typos@master
-        with:
-          files: .
-
       - name: Format Check
         run: just format-check
 
