@@ -23,14 +23,14 @@ Note that manually editing .plist files on macOS (rather than using e.g. the `de
 may cause changes not to be picked up until `cfprefsd` is restarted
 ([more information](https://eclecticlight.co/2017/07/06/sticky-preferences-why-trashing-or-editing-them-may-not-change-anything/)).
 
-Work around this by restarting your machine or running `sudo killall cfprefsd` after changing defaults.
+Work around this by adding `kill: ["cfprefsd"]` to the YAML file.
 
 ## Specifying preference domains
 
 For normal preference domains, you can directly specify the domain as a key, so to set `defaults read NSGlobalDomain com.apple.swipescrolldirection` you would use:
 
 ```yaml
-kill: cfprefsd
+kill: ["cfprefsd"]
 data:
   NSGlobalDomain:
     com.apple.swipescrolldirection: false
@@ -40,14 +40,15 @@ You can also use a full path to a plist file (the `.plist` file extension is opt
 
 ## Current Host modifications
 
-To modify defaults for the current host, you will need to add a custom entry for the path, using the [`UP_HARDWARE_UUID`] environment variable to get the current host.
+To modify defaults for the current host, you will need to add a `current_host: true` key/value pair:
 
 e.g. to set the preference returned by `defaults -currentHost read -globalDomain com.apple.mouse.tapBehavior` you would have:
 
 ```yaml
-kill: cfprefsd
+kill: ["cfprefsd"]
+current_host: true
 data:
-  ~/Library/Preferences/ByHost/.GlobalPreferences.${UP_HARDWARE_UUID}.plist:
+  NSGlobalDomain:
       # Enable Tap to Click for the current user.
       com.apple.mouse.tapBehavior: 1
 ```

@@ -90,6 +90,28 @@ This is the only way to set values in /Library/Preferences/
 
 See my [dotfiles](https://github.com/dsully/dotfiles/tree/main/.data/macos-defaults) repository.
 
+## On YAML
+
+![Yelling At My Laptop](docs/yaml.jpg?raw=true)
+
+[YAML](https://yaml.org) is not a format I prefer, but out of common formats it unfortunately had the most properties I wanted.
+
+* [JSON](https://en.wikipedia.org/wiki/JSON) doesn't have comments and is overly verbose (JSONC/JSON5 is not common)
+
+* [XML](https://en.wikipedia.org/wiki/XML): No.
+
+* [INI](https://en.wikipedia.org/wiki/INI_file) is too limited.
+
+* [TOML](https://toml.io/en/) is overly verbose and is surprisingly not that easy to work with in Rust. Deeply nested maps are poorly handled.
+
+* [KDL](https://kdl.dev) is nice, but document oriented & needs struct annotations. Derive is implemented in the 3rd party [Knuffle](https://docs.rs/knuffel/latest/knuffel/) crate.
+
+* [RON](https://github.com/ron-rs/ron) is Rust specific, so editor support isn't there.
+
+* [KCL](kcl-lang.io), [CUE](https://cuelang.org), [HCL](https://github.com/hashicorp/hcl), too high level & not appropriate for the task.
+
+So YAML it is.
+
 ## Inspiration
 
 This tool was heavily inspired by and uses code from [up-rs](https://github.com/gibfahn/up-rs)
