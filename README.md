@@ -92,7 +92,7 @@ See my [dotfiles](https://github.com/dsully/dotfiles/tree/main/.data/macos-defau
 
 ## On YAML
 
-![Yelling At My Laptop](docs/yaml.jpg?raw=true)
+![Yelling At My Laptop](docs/YAML.jpg?raw=true)
 
 [YAML](https://yaml.org) is not a format I prefer, but out of common formats it unfortunately had the most properties I wanted.
 
