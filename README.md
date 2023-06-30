@@ -86,6 +86,10 @@ You may also use full paths to `.plist` files instead of domain names.
 
 This is the only way to set values in /Library/Preferences/
 
+## Examples
+
+See my [dotfiles](https://github.com/dsully/dotfiles/tree/main/.data/macos-defaults) repository.
+
 ## Inspiration
 
 This tool was heavily inspired by and uses code from [up-rs](https://github.com/gibfahn/up-rs)
