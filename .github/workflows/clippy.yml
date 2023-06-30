@@ -1,0 +1,21 @@
+---
+name: Clippy
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+
+      - uses: extractions/setup-just@v1
+
+      - name: Run clippy
+        run: just lint
