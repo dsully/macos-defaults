@@ -4,7 +4,7 @@ name: Release
 on:
   push:
     tags:
-      - "*.*.*"
+      - v[0-9]+.*
 
 env:
   CARGO_TERM_COLOR: always
@@ -12,35 +12,31 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
-  build:
-    runs-on: macos-latest
-
+  create-release:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      - uses: taiki-e/create-gh-release-action@v1
+        # with:
+        #   changelog: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Rust Toolchain
-        uses: dtolnay/rust-toolchain@stable
+  upload-assets:
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            os: macos-11
+          - target: x86_64-apple-darwin
+            os: macos-11
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: taiki-e/upload-rust-binary-action@v1
         with:
-          components: clippy, rustfmt
-          targets: aarch64-apple-darwin, x86_64-apple-darwin
-          toolchain: stable
-
-      - name: Rust Cache
-        uses: swatinem/rust-cache@v2
-
-      - name: Build aarch64 & x86_64
-        run: |
-          cargo build --release --target=aarch64-apple-darwin
-          cargo build --release --target=x86_64-apple-darwin
-
-      - name: Create Universal Binary
-        run: |
-          lipo target/x86_64-apple-darwin/release/macos-defaults target/aarch64-apple-darwin/release/macos-defaults -create -output ./macos-defaults
-          strip ./macos-defaults
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: macos-defaults
-          path: ./macos-defaults
+          target: ${{ matrix.target }}
+          bin: macos-defaults
+          tar: all
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
