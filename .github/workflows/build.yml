@@ -2,19 +2,35 @@
 name: Build
 
 on:
+  workflow_dispatch:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+
 
 env:
+  CARGO_NET_RETRY: 10
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-D warnings"
   RUST_BACKTRACE: 1
 
 jobs:
   build:
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - name: Apple Silicon
+            target: aarch64-apple-darwin
+            arch: arm64
+            host: macos-latest
+            os: darwin
+          - name: Apple x86_64
+            target: x86_64-apple-darwin
+            arch: amd64
+            host: macos-latest
+            os: darwin
+
+    runs-on: ${{ matrix.host }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -23,25 +39,35 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
+          targets: ${{ matrix.target }}
           toolchain: stable
 
       - uses: swatinem/rust-cache@v2
       - uses: extractions/setup-just@v1
 
-      - name: Versions
-        run: |
-          git version
-          cargo version
-
-      - name: Format Check
-        run: just format-check
-
-      - name: Clippy
-        run: just lint
-
       - name: Build
-        run: |
-          cargo build
+        id: build
+        run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Test
-        run: cargo test
+      - name: Build archive name
+        id: archive_name
+        run: |
+          version=${{ github.ref_name }}
+          # [REPO_NAME]-[VERSION]-[OPERATING_SYSTEM]-[ARCHITECTURE].tar.gz
+          archive_name=${{ github.event.repository.name }}-${version#v}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+          echo "archive_name=${archive_name}" >> $GITHUB_ENV
+
+      - name: Archive release
+        id: archive
+        run: |
+          tar --create --gzip --file=${{ env.archive_name }} --directory=./target/${{ matrix.target }}/release/ ${{ github.event.repository.name }}
+          shasum -a 256 ${{ env.archive_name }} > ${{ env.archive_name }}.sha256
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v1
+        id: release
+        with:
+          files: |
+            ${{ env.archive_name }}
+            ${{ env.archive_name }}.sha256
+          draft: true

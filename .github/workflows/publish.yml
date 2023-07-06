@@ -1,0 +1,48 @@
+---
+name: Publish
+
+on:
+  workflow_dispatch:
+
+jobs:
+  homebrew:
+    name: Publish to dsully/homebrew-tap
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release my project to my Homebrew tap
+        uses: Justintime50/homebrew-releaser@v1
+        with:
+          homebrew_owner: dsully
+          homebrew_tap: homebrew-tap
+          formula_folder: Formula
+
+          commit_owner: Dan Sully
+          commit_email: dan+github@sully.org
+
+          github_token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+
+          install: |
+            bin.install "macos-defaults"
+
+            output = Utils.popen_read("#{bin}/macos-saves completions bash")
+            (bash_completion/"macos-defaults").write output
+
+            output = Utils.popen_read("#{bin}/macos-saves completions fish")
+            (fish_completion/"macos-defaults").write output
+
+            output = Utils.popen_read("#{bin}/macos-saves completions zsh")
+            (zsh_completion/"macos-defaults").write output
+
+            prefix.install_metafiles
+
+          test: |
+            system "macos-defaults -h"
+
+          target_darwin_amd64: true
+          target_darwin_arm64: true
+          target_linux_amd64: false
+          target_linux_arm64: false
+
+          update_readme_table: true
+
+          debug: true
