@@ -24,14 +24,14 @@ jobs:
           install: |
             bin.install "macos-defaults"
 
-            output = Utils.popen_read("#{bin}/macos-saves completions bash")
-            (bash_completion/"macos-defaults").write output
+            output = Utils.popen_read("#{bin}/macos-defaults completions bash")
+            (bash_completion/"macos-defaults.bash").write output
 
-            output = Utils.popen_read("#{bin}/macos-saves completions fish")
-            (fish_completion/"macos-defaults").write output
+            output = Utils.popen_read("#{bin}/macos-defaults completions fish")
+            (fish_completion/"macos-defaults.fish").write output
 
-            output = Utils.popen_read("#{bin}/macos-saves completions zsh")
-            (zsh_completion/"macos-defaults").write output
+            output = Utils.popen_read("#{bin}/macos-defaults completions zsh")
+            (zsh_completion/"macos-defaults.zsh").write output
 
             prefix.install_metafiles
 
