@@ -4,6 +4,14 @@ A tool for managing macOS defaults declaratively via YAML files.
 
 ## Install
 
+### Homebrew
+
+```shell
+brew install dsully/tap/macos-defaults
+```
+
+### Source
+
 ```shell
 cargo install --git https://github.com/dsully/macos-defaults
 ```
