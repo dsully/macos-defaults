@@ -116,7 +116,7 @@ See my [dotfiles](https://github.com/dsully/dotfiles/tree/main/.data/macos-defau
 
 * [RON](https://github.com/ron-rs/ron) is Rust specific, so editor support isn't there.
 
-* [KCL](kcl-lang.io), [CUE](https://cuelang.org), [HCL](https://github.com/hashicorp/hcl), too high level & not appropriate for the task.
+* [KCL](https://kcl-lang.io), [CUE](https://cuelang.org), [HCL](https://github.com/hashicorp/hcl), too high level & not appropriate for the task.
 
 So YAML it is.
 
