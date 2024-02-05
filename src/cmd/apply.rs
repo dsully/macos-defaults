@@ -5,7 +5,7 @@ use log::{debug, error, trace};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use sysinfo::{ProcessExt, Signal, System, SystemExt};
+use sysinfo::{Signal, System};
 
 use crate::defaults::{write_defaults_values, MacOSDefaults};
 use crate::errors::DefaultsError as E;

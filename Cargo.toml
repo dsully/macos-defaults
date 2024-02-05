@@ -16,35 +16,61 @@ repository = "https://github.com/dsully/macos-defaults"
 version = "0.1.0"
 
 [dependencies]
-camino = "1.1.4"
-clap = { version = "~4.3.8", features = [
+camino = "1.1.6"
+clap = { version = "~4.4.18", features = [
     "cargo",
     "color",
     "derive",
     "suggestions",
     "wrap_help",
 ] }
-clap-verbosity-flag = "2.0.1"
-clap_complete = "4.3.1"
+clap-verbosity-flag = "2.1.2"
+clap_complete = "4.4.10"
 color-eyre = "0.6.2"
-colored = "2.0.0"
+colored = "2.1.0"
 dirs = "5.0.1"
 displaydoc = "0.2.4"
-duct = "0.13.6"
-env_logger = "0.10.0"
+duct = "0.13.7"
+env_logger = "0.11.1"
 hex = "0.4.3"
-itertools = "0.11.0"
-log = "0.4.19"
-plist = "1.4.3"
-serde = { version = "1.0.164", features = [ "derive" ] }
-serde_yaml = "0.9.22"
-shadow-rs = { version = "0.23.0", default-features = false }
-sysinfo = "0.29.2"
-thiserror = "1.0.40"
+itertools = "0.12.1"
+log = "0.4.20"
+plist = "1.6.0"
+serde = { version = "1.0.196", features = [ "derive" ] }
+serde_yaml = "0.9.31"
+shadow-rs = { version = "0.26.1", default-features = false }
+sysinfo = "0.30.5"
+thiserror = "1.0.56"
 yaml-rust = "0.4.5"
 
 [build-dependencies]
-shadow-rs = { version = "0.23.0", default-features = false }
+shadow-rs = { version = "0.26.1", default-features = false }
 
 [dev-dependencies]
 assert_cli = "~0.6.3"
+
+# Config for 'cargo dist'
+[workspace.metadata.dist]
+# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.9.0"
+# CI backends to support
+ci = ["github"]
+# The installers to generate for each app
+installers = ["homebrew"]
+# A GitHub repo to push Homebrew formulas to
+tap = "dsully/homebrew-tap"
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin"]
+# Publish jobs to run in CI
+publish-jobs = ["homebrew"]
+# Publish jobs to run in CI
+pr-run-mode = "plan"
+
+# Use Apple Silicon runners.
+[workspace.metadata.dist.github-custom-runners]
+aarch64-apple-darwin = "macos-14"
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
