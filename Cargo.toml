@@ -40,9 +40,6 @@ yaml-rust = "0.4.5"
 [build-dependencies]
 shadow-rs = { version = "0.27.1", default-features = false }
 
-[dev-dependencies]
-assert_cli = "~0.6.3"
-
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)

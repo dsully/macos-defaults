@@ -17,3 +17,15 @@ lint:
 
 test:
     @cargo test --all
+
+patch:
+    @cargo release version patch --execute
+
+minor:
+    @cargo release version minor --execute
+
+major:
+    @cargo release version major --execute
+
+udeps:
+    RUSTC_BOOTSTRAP=1 cargo +nightly udeps --all-targets --backend depinfo
