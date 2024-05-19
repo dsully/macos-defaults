@@ -159,7 +159,7 @@ pub fn process_path(path: Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
                 .read_dir_utf8()?
                 .filter_map(Result::ok)
                 .filter(|entry| entry.path().extension().map_or(false, |ext| ext == "yml" || ext == "yaml"))
-                .map(|entry| path.join(entry.path()))
+                .map(|entry| entry.into_path())
                 .collect::<Vec<Utf8PathBuf>>();
 
             files.sort();
