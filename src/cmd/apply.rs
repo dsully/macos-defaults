@@ -150,16 +150,22 @@ fn kill_process_by_name(name: &str) {
     }
 }
 
+fn is_yaml(path: &Utf8PathBuf) -> bool {
+    path.extension()
+        .map(|ext| ext.to_ascii_lowercase())
+        .map(|ext| ext == "yml" || ext == "yaml")
+        .unwrap_or(false)
+}
+
 pub fn process_path(path: Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
-    //
     match path {
         path if path.is_file() => Ok(vec![path]),
         path if path.is_dir() => {
             let mut files = path
                 .read_dir_utf8()?
                 .filter_map(Result::ok)
-                .filter(|entry| entry.path().extension().map_or(false, |ext| ext == "yml" || ext == "yaml"))
                 .map(|entry| entry.into_path())
+                .filter(is_yaml)
                 .collect::<Vec<Utf8PathBuf>>();
 
             files.sort();
