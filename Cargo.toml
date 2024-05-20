@@ -16,29 +16,32 @@ repository = "https://github.com/dsully/macos-defaults"
 description = "Defaults setting for macOS"
 
 [dependencies]
-camino = "1.1.6"
-clap = { version = "~4.5.2", features = ["cargo", "color", "derive", "suggestions", "wrap_help"] }
+camino = "1.1.7"
+clap = { version = "~4.5.4", features = ["cargo", "color", "derive", "suggestions", "wrap_help"] }
 clap-verbosity-flag = "2.2.0"
-clap_complete = "4.5.1"
-color-eyre = "0.6.2"
+clap_complete = "4.5.2"
+color-eyre = "0.6.3"
 colored = "2.1.0"
 dirs = "5.0.1"
 displaydoc = "0.2.4"
 duct = "0.13.7"
 env_logger = "0.11.3"
 hex = "0.4.3"
-itertools = "0.12.1"
+itertools = "0.13.0"
 log = "0.4.21"
-plist = "1.6.0"
-serde = { version = "1.0.197", features = ["derive"] }
-serde_yaml = "0.9.32"
-shadow-rs = { version = "0.27.1", default-features = false }
-sysinfo = "0.30.7"
-thiserror = "1.0.58"
+plist = "1.6.1"
+serde = { version = "1.0.202", features = ["derive"] }
+serde_yaml = "0.9.34"
+shadow-rs = { version = "0.28.0", default-features = false }
+sysinfo = "0.30.12"
+thiserror = "1.0.61"
 yaml-rust = "0.4.5"
 
+[dev-dependencies]
+testresult = "0.4.0"
+
 [build-dependencies]
-shadow-rs = { version = "0.27.1", default-features = false }
+shadow-rs = { version = "0.28.0", default-features = false }
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]

@@ -1,3 +1,17 @@
+#![deny(clippy::all, clippy::pedantic, clippy::unwrap_used)]
+#![allow(
+    clippy::module_name_repetitions,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+
+    // Ignore clippy for the generated file from shadow-rs.
+    // https://github.com/baoyachi/shadow-rs/issues/151
+    clippy::non_ascii_literal,
+    clippy::print_stdout,
+    clippy::needless_raw_strings,
+    clippy::needless_raw_string_hashes
+)]
+
 use camino::Utf8PathBuf;
 use clap::crate_authors;
 use clap::{ArgGroup, CommandFactory, Parser, Subcommand, ValueHint};
@@ -90,7 +104,7 @@ fn main() -> Result<()> {
     match cli.command {
         Commands::Apply { path } => {
             for p in process_path(path)? {
-                fs::metadata(&p).map_err(|e| E::FileRead { path: p.to_owned(), source: e })?;
+                fs::metadata(&p).map_err(|e| E::FileRead { path: p.clone(), source: e })?;
 
                 apply_defaults(&p)?;
             }

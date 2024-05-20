@@ -256,7 +256,7 @@ pub(super) fn write_defaults_values(domain: &str, prefs: HashMap<String, plist::
     }
 
     if plist_path_exists {
-        let backup_path = Utf8PathBuf::from(format!("{}.prev", plist_path));
+        let backup_path = Utf8PathBuf::from(format!("{plist_path}.prev"));
 
         trace!("Backing up plist file {plist_path} -> {backup_path}",);
 
@@ -277,14 +277,14 @@ pub(super) fn write_defaults_values(domain: &str, prefs: HashMap<String, plist::
         })?;
     }
 
-    write_plist(plist_path_exists, &plist_path, plist_value)?;
+    write_plist(plist_path_exists, &plist_path, &plist_value)?;
     trace!("Plist updated at {plist_path}");
 
     Ok(values_changed)
 }
 
 /// Write a plist file to a path. Will fall back to trying to use sudo if a normal write fails.
-fn write_plist(plist_path_exists: bool, plist_path: &Utf8Path, plist_value: plist::Value) -> Result<(), E> {
+fn write_plist(plist_path_exists: bool, plist_path: &Utf8Path, plist_value: &plist::Value) -> Result<(), E> {
     //
     let should_write_binary = !plist_path_exists || is_binary(plist_path)?;
 
@@ -358,7 +358,7 @@ fn replace_ellipsis_array(new_value: &mut plist::Value, old_value: Option<&plist
         return;
     };
 
-    let array_copy: Vec<_> = array.drain(..).collect();
+    let array_copy: Vec<_> = std::mem::take(array);
 
     trace!("Performing array ellipsis replacement...");
     for element in array_copy {
@@ -465,74 +465,79 @@ pub fn replace_data_in_plist(value: &mut Value) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use color_eyre::Result;
     use log::info;
+    use testresult::TestResult;
 
     use super::NS_GLOBAL_DOMAIN;
     // use serial_test::serial;
 
     #[test]
     // #[serial(home_dir)] // Test relies on or changes the $HOME env var.
-    fn plist_path_tests() {
+    fn plist_path_tests() -> TestResult {
+        let home_dir = dirs::home_dir().expect("Expected to be able to calculate the user's home directory.");
+
         {
-            let domain_path = super::plist_path(NS_GLOBAL_DOMAIN, false).unwrap();
-            assert_eq!(dirs::home_dir().unwrap().join("Library/Preferences/.GlobalPreferences.plist"), domain_path);
+            let domain_path = super::plist_path(NS_GLOBAL_DOMAIN, false)?;
+            assert_eq!(home_dir.join("Library/Preferences/.GlobalPreferences.plist"), domain_path);
         }
 
         {
-            let mut expected_plist_path = dirs::home_dir().unwrap().join(
+            let mut expected_plist_path = home_dir.join(
                 "Library/Containers/com.apple.Safari/Data/Library/Preferences/com.apple.Safari.\
                  plist",
             );
             if !expected_plist_path.exists() {
-                expected_plist_path = dirs::home_dir().unwrap().join("Library/Preferences/com.apple.Safari.plist");
+                expected_plist_path = home_dir.join("Library/Preferences/com.apple.Safari.plist");
             }
-            let domain_path = super::plist_path("com.apple.Safari", false).unwrap();
+            let domain_path = super::plist_path("com.apple.Safari", false)?;
             assert_eq!(expected_plist_path, domain_path);
         }
 
         // Per-host preference (`current_host` is true).
         {
-            let domain_path = super::plist_path(NS_GLOBAL_DOMAIN, true).unwrap();
-            let hardware_uuid = super::get_hardware_uuid().unwrap();
+            let domain_path = super::plist_path(NS_GLOBAL_DOMAIN, true)?;
+            let hardware_uuid = super::get_hardware_uuid()?;
             assert_eq!(
-                dirs::home_dir()
-                    .unwrap()
-                    .join(format!("Library/Preferences/ByHost/.GlobalPreferences.{hardware_uuid}.plist")),
+                home_dir.join(format!("Library/Preferences/ByHost/.GlobalPreferences.{hardware_uuid}.plist")),
                 domain_path
             );
         }
 
         // Per-host sandboxed preference (`current_host` is true and the sandboxed plist exists).
         {
-            let domain_path = super::plist_path("com.apple.Safari", true).unwrap();
-            let hardware_uuid = super::get_hardware_uuid().unwrap();
+            let domain_path = super::plist_path("com.apple.Safari", true)?;
+            let hardware_uuid = super::get_hardware_uuid()?;
             assert_eq!(
-                dirs::home_dir().unwrap().join(format!(
+                home_dir.join(format!(
                     "Library/Containers/com.apple.Safari/Data/Library/Preferences/ByHost/com.\
                      apple.Safari.{hardware_uuid}.plist"
                 )),
                 domain_path
             );
         }
-    }
 
-    #[test]
-    fn test_get_hardware_uuid() -> Result<()> {
-        use duct::cmd;
-
-        let system_profiler_output = cmd!("system_profiler", "SPHardwareDataType").read()?;
-        let expected_value = system_profiler_output
-            .lines()
-            .find_map(|line| line.contains("UUID").then(|| line.split_whitespace().last().unwrap()))
-            .unwrap();
-        let actual_value = super::get_hardware_uuid()?;
-        assert_eq!(expected_value, actual_value);
         Ok(())
     }
 
     #[test]
-    fn test_serialize_binary() -> Result<()> {
+    fn test_get_hardware_uuid() -> TestResult {
+        use duct::cmd;
+
+        let system_profiler_output = cmd!("system_profiler", "SPHardwareDataType").read()?;
+
+        let expected_value = system_profiler_output
+            .lines()
+            .find_map(|line| line.contains("UUID").then(|| line.split_whitespace().last().unwrap_or_default()))
+            .unwrap_or_default();
+
+        let actual_value = super::get_hardware_uuid()?;
+        assert_eq!(expected_value, actual_value);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_serialize_binary() -> TestResult {
         // Modified version of ~/Library/Preferences/com.apple.humanunderstanding.plist
         let binary_plist_as_hex = "62706c6973743030d101025f10124861736847656e657261746f722e73616c744f10201111111122222222333333334444444455555555666666667777777788888888080b200000000000000101000000000000000300000000000000000000000000000043";
         let expected_yaml = "HashGenerator.salt: \
@@ -547,6 +552,7 @@ mod tests {
         let yaml_string = serde_yaml::to_string(&value)?;
         info!("Yaml value: {yaml_string}");
         assert_eq!(expected_yaml, yaml_string);
+
         Ok(())
     }
 }

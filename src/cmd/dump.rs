@@ -7,7 +7,7 @@ use std::io;
 use std::io::prelude::*;
 use yaml_rust::{YamlEmitter, YamlLoader};
 
-use crate::defaults::*;
+use crate::defaults::{get_plist_value_type, plist_path, replace_data_in_plist, MacOSDefaults, NS_GLOBAL_DOMAIN};
 use crate::errors::DefaultsError as E;
 
 /// `dump` command.
@@ -29,24 +29,23 @@ pub fn dump(current_host: bool, output: Option<Utf8PathBuf>, global_domain: bool
     trace!("Plist: {plist:?}");
 
     // First pass.
-    let plist = match serde_yaml::to_string(&plist) {
-        Ok(_) => plist,
-        Err(_) => {
-            warn!(
-                "Serializing plist value to YAML failed, assuming this is because it contained binary \
+    let plist = if serde_yaml::to_string(&plist).is_ok() {
+        plist
+    } else {
+        warn!(
+            "Serializing plist value to YAML failed, assuming this is because it contained binary \
              data and replacing that with hex-encoded binary data. This is incorrect, but allows \
              the output to be printed."
-            );
-            let mut value = plist.clone();
+        );
+        let mut value = plist.clone();
 
-            replace_data_in_plist(&mut value).map_err(|e| E::EyreError { source: e })?;
+        replace_data_in_plist(&mut value).map_err(|e| E::EyreError { source: e })?;
 
-            serde_yaml::to_string(&value).map_err(|e| E::SerializationFailed {
-                domain: domain.clone(),
-                source: e,
-            })?;
-            value
-        }
+        serde_yaml::to_string(&value).map_err(|e| E::SerializationFailed {
+            domain: domain.clone(),
+            source: e,
+        })?;
+        value
     };
 
     // Sort the top level keys.
@@ -61,7 +60,7 @@ pub fn dump(current_host: bool, output: Option<Utf8PathBuf>, global_domain: bool
 
     value.sort_keys();
 
-    let data = serde_yaml::to_value(Dictionary::from_iter(vec![(domain.to_owned(), Value::Dictionary(value))]))?;
+    let data = serde_yaml::to_value(Dictionary::from_iter(vec![(domain.clone(), Value::Dictionary(value))]))?;
 
     // Wrap in the container struct.
     let defaults = MacOSDefaults {
@@ -94,7 +93,7 @@ fn round_trip_yaml(defaults: &MacOSDefaults) -> Result<Vec<u8>> {
         emitter.compact(false);
         emitter.dump(&doc).ok();
 
-        buffer.write_all(content.as_ref())?
+        buffer.write_all(content.as_ref())?;
     }
 
     Ok(buffer)

@@ -1,6 +1,6 @@
 use camino::Utf8PathBuf;
 use color_eyre::eyre::{eyre, Result, WrapErr};
-use colored::*;
+use colored::Colorize;
 use log::{debug, error, trace};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -97,8 +97,8 @@ pub fn apply_defaults(path: &Utf8PathBuf) -> Result<()> {
     debug!("Setting defaults");
 
     // TODO: Get global CLI verbosity values.
-    if config.description.is_some() {
-        println!("  {} {}", "▶".green(), config.description.unwrap().bold().white());
+    if let Some(description) = config.description {
+        println!("  {} {}", "▶".green(), description.bold().white());
     }
 
     let (passed, errors): (Vec<_>, Vec<_>) = defaults
@@ -117,7 +117,7 @@ pub fn apply_defaults(path: &Utf8PathBuf) -> Result<()> {
 
     if changed && passed.into_iter().any(|r| r) {
         if let Some(kill) = config.kill {
-            for process in kill.iter() {
+            for process in &kill {
                 println!("    {} Restarting: {}", "✖".blue(), process.white());
 
                 kill_process_by_name(process);
@@ -125,18 +125,17 @@ pub fn apply_defaults(path: &Utf8PathBuf) -> Result<()> {
         }
     }
 
-    match errors.is_empty() {
-        true => Ok(()),
-        false => {
-            for error in &errors {
-                error!("{error:?}");
-            }
-
-            let mut errors_iter = errors.into_iter();
-
-            Err(errors_iter.next().ok_or(E::UnexpectedNone)?).wrap_err_with(|| eyre!("{:?}", errors_iter.collect::<Vec<_>>()))
-        }
+    if errors.is_empty() {
+        return Ok(());
     }
+
+    for error in &errors {
+        error!("{error:?}");
+    }
+
+    let mut errors_iter = errors.into_iter();
+
+    Err(errors_iter.next().ok_or(E::UnexpectedNone)?).wrap_err_with(|| eyre!("{:?}", errors_iter.collect::<Vec<_>>()))
 }
 
 fn kill_process_by_name(name: &str) {
@@ -151,10 +150,7 @@ fn kill_process_by_name(name: &str) {
 }
 
 fn is_yaml(path: &Utf8PathBuf) -> bool {
-    path.extension()
-        .map(|ext| ext.to_ascii_lowercase())
-        .map(|ext| ext == "yml" || ext == "yaml")
-        .unwrap_or(false)
+    path.extension().map(str::to_ascii_lowercase).is_some_and(|ext| ext == "yml" || ext == "yaml")
 }
 
 pub fn process_path(path: Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
