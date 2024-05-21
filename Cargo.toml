@@ -1,19 +1,20 @@
 [package]
-name = "macos-defaults"
-version = "0.1.0"
-authors = ["Dan Sully <dan+github@sully.org>"]
+authors = [ "Dan Sully <dan+github@sully.org>" ]
 build = "build.rs"
 categories = [
   "command-line-utilities",
   "config",
   "os::macos-apis",
 ]
+description = "Defaults setting for macOS"
 edition = "2021"
-keywords = ["macos", "user", "defaults", "declarative", "yaml"]
+homepage = "https://github.com/dsully/macos-defaults"
+keywords = [ "macos", "user", "defaults", "declarative", "yaml" ]
 license = "MIT"
+name = "macos-defaults"
 readme = "README.md"
 repository = "https://github.com/dsully/macos-defaults"
-description = "Defaults setting for macOS"
+version = "0.1.0"
 
 [dependencies]
 camino = "1.1.7"
@@ -46,25 +47,39 @@ shadow-rs = { version = "0.28.0", default-features = false }
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.11.1"
+cargo-dist-version = "0.14.1"
 # CI backends to support
-ci = ["github"]
+ci = "github"
 # The installers to generate for each app
-installers = ["homebrew"]
+installers = [ "homebrew" ]
 # A GitHub repo to push Homebrew formulas to
 tap = "dsully/homebrew-tap"
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = ["aarch64-apple-darwin"]
+targets = [ "aarch64-apple-darwin" ]
 # Publish jobs to run in CI
-publish-jobs = ["homebrew"]
+publish-jobs = [ "homebrew" ]
 # Publish jobs to run in CI
 pr-run-mode = "plan"
 
-# Use Apple Silicon runners.
-[workspace.metadata.dist.github-custom-runners]
-aarch64-apple-darwin = "macos-14"
+  # Use Apple Silicon runners.
+  [workspace.metadata.dist.github-custom-runners]
+  aarch64-apple-darwin = "macos-14"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
+codegen-units = 1
+debug = false
+incremental = false
 inherits = "release"
-lto = "thin"
+lto = true
+opt-level = 3
+panic = "abort"
+strip = "none"
+
+[profile.dev]
+debug = 0
+
+[profile.release]
+codegen-units = 1
+lto = true
+panic = "abort"
