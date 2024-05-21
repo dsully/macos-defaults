@@ -4,7 +4,6 @@
 //
 use camino::{Utf8Path, Utf8PathBuf};
 use color_eyre::eyre::{eyre, Result};
-use displaydoc::Display;
 use duct::cmd;
 use itertools::Itertools;
 use log::{debug, info, trace, warn};
@@ -22,7 +21,7 @@ const ELLIPSIS: &str = "...";
 
 pub const NS_GLOBAL_DOMAIN: &str = "NSGlobalDomain";
 
-#[derive(Debug, Display, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct MacOSDefaults {
     /// Description of the task.

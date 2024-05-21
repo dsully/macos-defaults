@@ -160,15 +160,16 @@ pub fn process_path(path: Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
             let mut files = path
                 .read_dir_utf8()?
                 .filter_map(Result::ok)
-                .map(|entry| entry.into_path())
+                .map(camino::Utf8DirEntry::into_path)
                 .filter(is_yaml)
                 .collect::<Vec<Utf8PathBuf>>();
 
             files.sort();
 
-            match files.is_empty() {
-                true => Err(eyre!("No YAML files were found in path {path}.")),
-                false => Ok(files),
+            if files.is_empty() {
+                Err(eyre!("No YAML files were found in path {path}."))
+            } else {
+                Ok(files)
             }
         }
         _ => Err(eyre!("Couldn't read YAML from: {path}.")),
