@@ -382,7 +382,15 @@ fn replace_ellipsis_array(new_array: &mut Vec<Value>, old_value: Option<&Value>)
 /// You end up with: [<new contents before ...>, <old contents>, <new contents after ...>]
 /// But any duplicates between old and new values are removed, with the first value taking
 /// precedence.
+///
+/// If an entry of this element is a dictionary or an array, this applies recursively.
 fn replace_ellipsis_dict(new_dict: &mut Dictionary, old_value: Option<&Value>) {
+    // recursively call replace elipses on entry values, with their corresponding value from the old dictionary
+    for (key, child_value) in &mut *new_dict {
+        let old_child_value = old_value.and_then(Value::as_dictionary).and_then(|old_dict| old_dict.get(key));
+        replace_ellipsis(child_value, old_child_value);
+    }
+
     if !new_dict.contains_key(ELLIPSIS) {
         trace!("New value doesn't contain ellipsis, skipping ellipsis replacement...");
         return;
