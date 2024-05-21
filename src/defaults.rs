@@ -223,8 +223,7 @@ pub(super) fn write_defaults_values(domain: &str, prefs: HashMap<String, plist::
         );
 
         // Handle `...` values in arrays or dicts provided in input.
-        replace_ellipsis_array(&mut new_value, old_value);
-        replace_ellipsis_dict(&mut new_value, old_value);
+        replace_ellipsis(&mut new_value, old_value);
 
         if let Some(old_value) = old_value {
             if old_value == &new_value {
@@ -336,63 +335,61 @@ fn write_plist(plist_path_exists: bool, plist_path: &Utf8Path, plist_value: &pli
     Ok(())
 }
 
+/// Replace "..." as an array value or dictionary key
+fn replace_ellipsis(new_value: &mut Value, old_value: Option<&Value>) {
+    match new_value {
+        Value::Array(arr) => replace_ellipsis_array(arr, old_value),
+        Value::Dictionary(dict) => replace_ellipsis_dict(dict, old_value),
+        _ => trace!("Value isn't an array or a dict, skipping ellipsis replacement..."),
+    }
+}
+
 /// Replace `...` values in an input array.
-/// Does nothing if not an array.
 /// You end up with: [<new values before ...>, <old values>, <new values after ...>]
 /// But any duplicates between old and new values are removed, with the first value taking
 /// precedence.
-fn replace_ellipsis_array(new_value: &mut plist::Value, old_value: Option<&plist::Value>) {
-    let Some(array) = new_value.as_array_mut() else {
-        trace!("Value isn't an array, skipping ellipsis replacement...");
-        return;
-    };
+fn replace_ellipsis_array(new_array: &mut Vec<Value>, old_value: Option<&Value>) {
     let ellipsis = plist::Value::String("...".to_owned());
-    let Some(position) = array.iter().position(|x| x == &ellipsis) else {
+    let Some(position) = new_array.iter().position(|x| x == &ellipsis) else {
         trace!("New value doesn't contain ellipsis, skipping ellipsis replacement...");
         return;
     };
 
     let Some(old_array) = old_value.and_then(plist::Value::as_array) else {
         trace!("Old value wasn't an array, skipping ellipsis replacement...");
-        array.remove(position);
+        new_array.remove(position);
         return;
     };
 
-    let array_copy: Vec<_> = std::mem::take(array);
+    let array_copy: Vec<_> = std::mem::take(new_array);
 
     trace!("Performing array ellipsis replacement...");
     for element in array_copy {
         if element == ellipsis {
             for old_element in old_array {
-                if array.contains(old_element) {
+                if new_array.contains(old_element) {
                     continue;
                 }
-                array.push(old_element.clone());
+                new_array.push(old_element.clone());
             }
-        } else if !array.contains(&element) {
-            array.push(element);
+        } else if !new_array.contains(&element) {
+            new_array.push(element);
         }
     }
 }
 
 /// Replace `...` keys in an input dict.
-/// Does nothing if not a dictionary.
 /// You end up with: [<new contents before ...>, <old contents>, <new contents after ...>]
 /// But any duplicates between old and new values are removed, with the first value taking
 /// precedence.
-fn replace_ellipsis_dict(new_value: &mut plist::Value, old_value: Option<&plist::Value>) {
-    let Some(dict) = new_value.as_dictionary_mut() else {
-        trace!("Value isn't a dict, skipping ellipsis replacement...");
-        return;
-    };
-
-    if !dict.contains_key(ELLIPSIS) {
+fn replace_ellipsis_dict(new_dict: &mut Dictionary, old_value: Option<&Value>) {
+    if !new_dict.contains_key(ELLIPSIS) {
         trace!("New value doesn't contain ellipsis, skipping ellipsis replacement...");
         return;
     }
 
-    let before = dict.keys().take_while(|x| x != &ELLIPSIS).cloned().collect_vec();
-    dict.remove(ELLIPSIS);
+    let before = new_dict.keys().take_while(|x| x != &ELLIPSIS).cloned().collect_vec();
+    new_dict.remove(ELLIPSIS);
 
     let Some(old_dict) = old_value.and_then(plist::Value::as_dictionary) else {
         trace!("Old value wasn't a dict, skipping ellipsis replacement...");
@@ -402,7 +399,7 @@ fn replace_ellipsis_dict(new_value: &mut plist::Value, old_value: Option<&plist:
     trace!("Performing dict ellipsis replacement...");
     for (key, value) in old_dict {
         if !before.contains(key) {
-            dict.insert(key.clone(), value.clone());
+            new_dict.insert(key.clone(), value.clone());
         }
     }
 }
