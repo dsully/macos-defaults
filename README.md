@@ -94,6 +94,45 @@ You may also use full paths to `.plist` files instead of domain names.
 
 This is the only way to set values in /Library/Preferences/
 
+### Dictionary merge syntax
+
+If a dictionary property contains the key `...`, it will be merged with the previous value of that dictionary. Keys before the `...` take precendece, then the old keys, then keys after it.
+
+For example, the following config:
+```yaml
+data:
+  com.apple.finder:
+    DesktopViewSettings:
+      IconViewSettings:
+        labelOnBottom: false # item info on right
+        ...: {}
+        iconSize: 80.0
+
+```
+Will perform the following actions:
+* Set `DesktopViewSettings:IconViewSettings:labelOnBottom` to true,
+* Set `DesktopViewSettings:IconViewSettings:iconSize` to 80.0, but only if it doesn't already exist.  
+* Keep all other keys on `IconViewSettings` as-is.
+
+If `...` isn't present, the dictionary will be fully overwritten, and keys not specified will be deleted.
+
+### Array merge syntax
+
+If an array contains the element `"..."`, it will be replaced by the contents of the existing array. Arrays are treated like sets, so elements which already exist will not be added.
+
+For example, the following config:
+
+```yaml
+data:
+  org.my.test:
+    aDict:
+    };
+        anArray: ["foo", "...", "bar"]
+```
+
+* Prepend `"foo"` to `aDict:anArray`, if it doesn't already contain `"foo"`.
+* Append `"bar"` to `aDict:anArray`, if it doesn't already contain `"bar"`.
+
 ## Examples
 
 See my [dotfiles](https://github.com/dsully/dotfiles/tree/main/.data/macos-defaults) repository.
