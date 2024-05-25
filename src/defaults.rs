@@ -405,6 +405,9 @@ fn deep_merge_dictionaries(new_value: &mut Value, old_value: Option<&Value>) {
         trace!("New value is an empty dictionary. Skipping merge...");
         return;
     }
+    // the "..." key is no longer used, and its merging behavior is performed by default. ignore it, for compatibility with older YAML.
+    new_dict.remove(ELLIPSIS);
+
     let Some(old_dict) = old_value.and_then(plist::Value::as_dictionary) else {
         trace!("Old value wasn't a dict. Skipping merge...");
         return;
@@ -417,7 +420,6 @@ fn deep_merge_dictionaries(new_value: &mut Value, old_value: Option<&Value>) {
         let old_child_value = old_dict.get(key);
         merge_value(new_child_value, old_child_value);
     }
-    
 
     if new_dict.contains_key(BANG) {
         trace!("Dictionary contains key '!'. Skipping merge...");
