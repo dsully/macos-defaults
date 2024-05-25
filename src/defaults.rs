@@ -473,7 +473,7 @@ mod tests {
     use log::info;
     use testresult::TestResult;
 
-    use super::NS_GLOBAL_DOMAIN;
+    use super::{replace_ellipsis, NS_GLOBAL_DOMAIN};
     // use serial_test::serial;
 
     #[test]
@@ -558,6 +558,122 @@ mod tests {
         info!("Yaml value: {yaml_string}");
         assert_eq!(expected_yaml, yaml_string);
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_replace_ellipsis_dict() -> TestResult {
+        use plist::{Dictionary, Value};
+
+        let old_value = Dictionary::from_iter([
+            ("foo", Value::from(10)), // !!
+            ("bar", 20.into()),       // !! takes precedence
+        ])
+        .into();
+        let mut new_value = Dictionary::from_iter([
+            ("foo", Value::from(30)), // !!! takes precedence
+            ("fub", 40.into()),       // !!!
+            ("...", "".into()),
+            ("bar", 60.into()), // !
+            ("baz", 70.into()), // !
+        ])
+        .into();
+
+        replace_ellipsis(&mut new_value, Some(&old_value));
+
+        let expected = Dictionary::from_iter([
+            ("foo", Value::from(30)), // from new
+            ("fub", 40.into()),
+            ("bar", 20.into()), // from old
+            ("baz", 70.into()),
+        ])
+        .into();
+
+        assert_eq!(new_value, expected);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_replace_ellipsis_dict_nested() -> TestResult {
+        use plist::{Dictionary, Value};
+
+        let old_value = Dictionary::from_iter([(
+            "level_1",
+            Dictionary::from_iter([(
+                "level_2",
+                Dictionary::from_iter([
+                    ("foo", Value::from(10)), //
+                    ("bar", 20.into()),
+                    ("baz", 30.into()),
+                ]),
+            )]),
+        )])
+        .into();
+
+        let mut new_value = Dictionary::from_iter([(
+            "level_1",
+            Dictionary::from_iter([(
+                "level_2",
+                Dictionary::from_iter([
+                    ("baz", Value::from(90)), //
+                    ("...", Value::from("")),
+                ]), //
+            )]),
+        )])
+        .into();
+
+        replace_ellipsis(&mut new_value, Some(&old_value));
+
+        let expected = Dictionary::from_iter([(
+            "level_1",
+            Dictionary::from_iter([(
+                "level_2",
+                Dictionary::from_iter([
+                    ("foo", Value::from(10)), //
+                    ("bar", 20.into()),
+                    ("baz", 90.into()),
+                ]),
+            )]),
+        )])
+        .into();
+
+        assert_eq!(new_value, expected);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_replace_ellipsis_array() -> TestResult {
+        let old_value = vec![
+            10.into(), // !
+            20.into(), // !
+            30.into(), // !
+            40.into(), // !
+        ]
+        .into();
+        let mut new_value = vec![
+            30.into(), // !!!
+            20.into(), // !!!
+            "...".into(),
+            60.into(), // !!
+            50.into(), // !!
+            40.into(), // !!
+        ]
+        .into();
+
+        replace_ellipsis(&mut new_value, Some(&old_value));
+
+        let expected = vec![
+            30.into(), // from new array before "..."
+            20.into(),
+            10.into(), // from old array
+            40.into(),
+            60.into(), // from new array after "..."
+            50.into(),
+        ]
+        .into();
+        assert_eq!(new_value, expected);
         Ok(())
     }
 }
