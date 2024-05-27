@@ -90,9 +90,53 @@ data:
     ABIncludePhotosInVCard: true
 ```
 
-You may also use full paths to `.plist` files instead of domain names.
+You may also use full paths to `.plist` files instead of domain names. This is the only way to set values in /Library/Preferences/.
 
-This is the only way to set values in /Library/Preferences/
+### Overwrite syntax
+
+By default, the YAML will be merged against existing domains.
+
+For example, the following config will leave any other keys on `DesktopViewSettings:IconViewSettings` untouched:
+```yaml
+data:
+  com.apple.finder:
+    DesktopViewSettings:
+      IconViewSettings:
+        labelOnBottom: false # item info on right
+        iconSize: 80.0
+```
+
+This can be overridden by adding the key `"!"` to a dict, which will delete any keys which are not specified. For example, the following config will delete all properties on the com.apple.finder domain except for DesktopViewSettings, and likewise, all properties on `IconViewSettings` except those specified.
+
+```yaml
+data:
+  com.apple.finder:
+    "!": {} # overwrite!
+    DesktopViewSettings:
+      IconViewSettings:
+        "!": {} # overwrite!
+        labelOnBottom: false # item info on right
+        iconSize: 80.0
+```
+
+This feature has the potential to erase important settings, so exercise caution. Running `macos-defaults apply` creates a backup of each modified plist at, for example, `~/Library/Preferences/com.apple.finder.plist.prev`.
+
+### Array merge syntax
+
+If an array contains the element `"..."`, it will be replaced by the contents of the existing array. Arrays are treated like sets, so elements which already exist will not be added.
+
+For example, the following config:
+
+```yaml
+data:
+  org.my.test:
+    aDict:
+    };
+        anArray: ["foo", "...", "bar"]
+```
+
+* Prepend `"foo"` to `aDict:anArray`, if it doesn't already contain `"foo"`.
+* Append `"bar"` to `aDict:anArray`, if it doesn't already contain `"bar"`.
 
 ## Examples
 
