@@ -1,10 +1,13 @@
+use std::collections::HashMap;
+use std::ffi::OsStr;
+use std::fs;
+use std::os::unix::ffi::OsStrExt;
+
 use camino::Utf8PathBuf;
 use color_eyre::eyre::{eyre, Result, WrapErr};
 use colored::Colorize;
 use log::{debug, error, trace};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fs;
 use sysinfo::{Signal, System};
 
 use crate::defaults::{write_defaults_values, MacOSDefaults};
@@ -140,10 +143,10 @@ pub fn apply_defaults(path: &Utf8PathBuf) -> Result<()> {
 
 fn kill_process_by_name(name: &str) {
     let mut sys = System::new();
-    sys.refresh_processes();
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::All);
 
-    for process in sys.processes_by_exact_name(name) {
-        debug!("Prosses running: {} {}", process.pid(), process.name());
+    for process in sys.processes_by_exact_name(OsStr::from_bytes(name.as_bytes())) {
+        debug!("Process running: {} {}", process.pid(), process.name().to_string_lossy());
 
         process.kill_with(Signal::Term);
     }

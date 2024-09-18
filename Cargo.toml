@@ -14,40 +14,40 @@ license = "MIT"
 name = "macos-defaults"
 readme = "README.md"
 repository = "https://github.com/dsully/macos-defaults"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies]
-camino = "1.1.7"
-clap = { version = "~4.5.4", features = [
+camino = "1.1.9"
+clap = { version = "~4.5.17", features = [
   "cargo",
   "color",
   "derive",
   "suggestions",
   "wrap_help",
 ] }
-clap-verbosity-flag = "2.2.0"
-clap_complete = "4.5.2"
+clap-verbosity-flag = "2.2.1"
+clap_complete = "4.5.28"
 color-eyre = "0.6.3"
 colored = "2.1.0"
 dirs = "5.0.1"
 duct = "0.13.7"
-env_logger = "0.11.3"
+env_logger = "0.11.5"
 hex = "0.4.3"
 itertools = "0.13.0"
-log = "0.4.21"
-plist = "1.6.1"
-serde = { version = "1.0.202", features = [ "derive" ] }
+log = "0.4.22"
+plist = "1.7.0"
+serde = { version = "1.0.210", features = [ "derive" ] }
 serde_yaml = "0.9.34"
-shadow-rs = { version = "0.28.0", default-features = false }
-sysinfo = "0.30.12"
-thiserror = "1.0.61"
+shadow-rs = { version = "0.35.0", default-features = false }
+sysinfo = "0.31.4"
+thiserror = "1.0.63"
 yaml-rust = "0.4.5"
 
 [dev-dependencies]
-testresult = "0.4.0"
+testresult = "0.4.1"
 
 [build-dependencies]
-shadow-rs = { version = "0.28.0", default-features = false }
+shadow-rs = { version = "0.35.0", default-features = false }
 
 [lints.clippy]
 pedantic = "deny"
@@ -55,7 +55,7 @@ pedantic = "deny"
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.14.1"
+cargo-dist-version = "0.22.1"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
@@ -66,7 +66,7 @@ tap = "dsully/homebrew-tap"
 targets = [ "aarch64-apple-darwin" ]
 # Publish jobs to run in CI
 publish-jobs = [ "homebrew" ]
-# Publish jobs to run in CI
+# Which actions to run on pull requests
 pr-run-mode = "plan"
 
   # Use Apple Silicon runners.

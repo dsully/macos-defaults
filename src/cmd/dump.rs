@@ -1,10 +1,10 @@
+use std::fs::File;
+use std::io::prelude::*;
+
 use camino::Utf8PathBuf;
 use color_eyre::eyre::Result;
 use log::{debug, trace, warn};
 use plist::{Dictionary, Value};
-use std::fs::File;
-use std::io;
-use std::io::prelude::*;
 use yaml_rust::{YamlEmitter, YamlLoader};
 
 use crate::defaults::{get_plist_value_type, plist_path, replace_data_in_plist, MacOSDefaults, NS_GLOBAL_DOMAIN};
@@ -76,7 +76,7 @@ pub fn dump(current_host: bool, output: Option<Utf8PathBuf>, global_domain: bool
 
     match output {
         Some(path) => File::create(path)?.write(&yaml),
-        None => io::stdout().write(&yaml),
+        None => std::io::stdout().write(&yaml),
     }?;
 
     Ok(())

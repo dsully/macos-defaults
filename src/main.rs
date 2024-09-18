@@ -12,14 +12,15 @@
     clippy::needless_raw_string_hashes
 )]
 
+use std::fs;
+use std::io;
+
 use camino::Utf8PathBuf;
 use clap::crate_authors;
 use clap::{ArgGroup, CommandFactory, Parser, Subcommand, ValueHint};
 use clap_complete::{generate, Shell as CompletionShell};
 use color_eyre::eyre::Result;
 use shadow_rs::shadow;
-use std::fs;
-use std::io;
 
 // https://crates.io/crates/shadow-rs
 shadow!(build);
