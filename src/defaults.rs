@@ -1,17 +1,18 @@
 //! Utility functions for updating plist files.
 //
 // NB: Most of this code originated from: https://github.com/gibfahn/up-rs, MIT & Apache 2.0 licensed.
-//
+
+use std::collections::HashMap;
+use std::fs::{self, File};
+use std::io::Read;
+use std::mem;
+
 use camino::{Utf8Path, Utf8PathBuf};
 use color_eyre::eyre::{eyre, Result};
 use duct::cmd;
 use log::{debug, info, trace, warn};
 use plist::{Dictionary, Value};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fs::{self, File};
-use std::io::Read;
-use std::mem;
 
 use super::errors::DefaultsError as E;
 
@@ -356,12 +357,14 @@ fn merge_value(new_value: &mut Value, old_value: Option<&Value>) {
 /// But any duplicates between old and new values are removed, with the first value taking
 /// precedence.
 fn replace_ellipsis_array(new_value: &mut Value, old_value: Option<&Value>) {
+    //
     let Value::Array(new_array) = new_value else {
         trace!("Value isn't an array, skipping ellipsis replacement...");
         return;
     };
 
     let ellipsis = plist::Value::from(ELLIPSIS);
+
     let Some(position) = new_array.iter().position(|x| x == &ellipsis) else {
         trace!("New value doesn't contain ellipsis, skipping ellipsis replacement...");
         return;
@@ -376,6 +379,7 @@ fn replace_ellipsis_array(new_value: &mut Value, old_value: Option<&Value>) {
     let array_copy: Vec<_> = std::mem::take(new_array);
 
     trace!("Performing array ellipsis replacement...");
+
     for element in array_copy {
         if element == ellipsis {
             for old_element in old_array {
@@ -390,20 +394,23 @@ fn replace_ellipsis_array(new_value: &mut Value, old_value: Option<&Value>) {
     }
 }
 
-/// Recursively merge dictionaries, unless the new value is empty `{}`.
-/// If a dictionary
-/// * is empty `{}`
-/// * contains a key `{}`
-/// Then the merge step will be skipped for it and its children.
+// Recursively merge dictionaries, unless the new value is empty `{}`.
+// If a dictionary
+// * is empty `{}`
+// * contains a key `{}`
+// Then the merge step will be skipped for it and its children.
 fn deep_merge_dictionaries(new_value: &mut Value, old_value: Option<&Value>) {
+    //
     let Value::Dictionary(new_dict) = new_value else {
         trace!("New value is not a dictionary, Skipping merge...");
         return;
     };
+
     if new_dict.is_empty() {
         trace!("New value is an empty dictionary. Skipping merge...");
         return;
     }
+
     // the "..." key is no longer used, and its merging behavior is performed by default. ignore it, for compatibility with older YAML.
     new_dict.remove(ELLIPSIS);
 
@@ -411,9 +418,9 @@ fn deep_merge_dictionaries(new_value: &mut Value, old_value: Option<&Value>) {
         trace!("Old value wasn't a dict. Skipping merge...");
         return;
     };
-    
+
     // for each value, recursively invoke this to merge any child dictionaries.
-    // also perform array ellipsis replacment.
+    // also perform array ellipsis replacement.
     // this occurs even if "!" is present.
     for (key, new_child_value) in &mut *new_dict {
         let old_child_value = old_dict.get(key);
@@ -425,7 +432,9 @@ fn deep_merge_dictionaries(new_value: &mut Value, old_value: Option<&Value>) {
         new_dict.remove(BANG);
         return;
     }
+
     trace!("Performing deep merge...");
+
     for (key, old_value) in old_dict {
         if !new_dict.contains_key(key) {
             new_dict.insert(key.clone(), old_value.clone());
@@ -497,10 +506,8 @@ mod tests {
     use crate::defaults::deep_merge_dictionaries;
 
     use super::{replace_ellipsis_array, NS_GLOBAL_DOMAIN};
-    // use serial_test::serial;
 
     #[test]
-    // #[serial(home_dir)] // Test relies on or changes the $HOME env var.
     fn plist_path_tests() -> TestResult {
         let home_dir = dirs::home_dir().expect("Expected to be able to calculate the user's home directory.");
 
@@ -585,7 +592,7 @@ mod tests {
     }
 
     #[test]
-    fn test_deep_merge_dictionaries() -> TestResult {
+    fn test_deep_merge_dictionaries() {
         use plist::{Dictionary, Value};
 
         let old_value = Dictionary::from_iter([
@@ -612,12 +619,10 @@ mod tests {
         .into();
 
         assert_eq!(new_value, expected);
-
-        Ok(())
     }
 
     #[test]
-    fn test_replace_ellipsis_dict_nested() -> TestResult {
+    fn test_replace_ellipsis_dict_nested() {
         use plist::{Dictionary, Value};
 
         let old_value = Dictionary::from_iter([(
@@ -660,12 +665,10 @@ mod tests {
         .into();
 
         assert_eq!(new_value, expected);
-
-        Ok(())
     }
 
     #[test]
-    fn test_replace_ellipsis_dict_nested_bang() -> TestResult {
+    fn test_replace_ellipsis_dict_nested_bang() {
         use plist::{Dictionary, Value};
 
         let old_value = Dictionary::from_iter([(
@@ -702,12 +705,10 @@ mod tests {
         .into();
 
         assert_eq!(new_value, expected);
-
-        Ok(())
     }
 
     #[test]
-    fn test_replace_ellipsis_array() -> TestResult {
+    fn test_replace_ellipsis_array() {
         let old_value = vec![
             10.into(), // !
             20.into(), // !
@@ -736,7 +737,7 @@ mod tests {
             50.into(),
         ]
         .into();
+
         assert_eq!(new_value, expected);
-        Ok(())
     }
 }

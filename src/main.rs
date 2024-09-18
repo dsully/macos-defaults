@@ -62,6 +62,10 @@ pub(crate) enum Commands {
         /// Sets the input file or path to use.
         #[arg(required = true, value_hint = ValueHint::FilePath)]
         path: Utf8PathBuf,
+
+        /// If changes were applied, exit with this return code.
+        #[clap(short, long, default_value = "0")]
+        exit_code: i32,
     },
 
     /// Generate shell completions to stdout.
@@ -103,18 +107,22 @@ fn main() -> Result<()> {
     env_logger::Builder::new().filter_level(cli.verbose.log_level_filter()).init();
 
     match cli.command {
-        Commands::Apply { path } => {
+        Commands::Apply { path, exit_code } => {
+            //
+            let mut changed = false;
+
             for p in process_path(path)? {
                 fs::metadata(&p).map_err(|e| E::FileRead { path: p.clone(), source: e })?;
 
-                apply_defaults(&p)?;
+                if apply_defaults(&p)? {
+                    changed = true;
+                }
             }
 
-            Ok(())
+            std::process::exit(if changed { exit_code } else { 0 });
         }
         Commands::Completions { shell } => {
             generate(shell, &mut CLI::command(), "macos-defaults", &mut io::stdout().lock());
-
             Ok(())
         }
         Commands::Dump {
@@ -123,5 +131,7 @@ fn main() -> Result<()> {
             global_domain,
             domain,
         } => dump(current_host, path, global_domain, domain),
-    }
+    }?;
+
+    std::process::exit(0);
 }

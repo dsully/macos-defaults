@@ -79,7 +79,7 @@ data:
 #[derive(Debug, Default, Serialize, Deserialize)]
 struct DefaultsConfig(HashMap<String, HashMap<String, plist::Value>>);
 
-pub fn apply_defaults(path: &Utf8PathBuf) -> Result<()> {
+pub fn apply_defaults(path: &Utf8PathBuf) -> Result<bool> {
     //
     let s = fs::read_to_string(path).map_err(|e| E::FileRead {
         path: path.to_owned(),
@@ -129,7 +129,7 @@ pub fn apply_defaults(path: &Utf8PathBuf) -> Result<()> {
     }
 
     if errors.is_empty() {
-        return Ok(());
+        return Ok(changed);
     }
 
     for error in &errors {
