@@ -522,6 +522,7 @@ dependencies = [
  "testresult",
  "thiserror",
  "yaml-rust",
+ "yaml-split",
 ]
 
 [[package]]
@@ -1223,4 +1224,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56c1936c4cc7a1c9ab21a1ebb602eb942ba868cbd44a99cb7cdc5892335e1c85"
 dependencies = [
  "linked-hash-map",
+]
+
+[[package]]
+name = "yaml-split"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9dab2bfe3b9aa09e8424e0e5139526c6a3857c4bd334d66b0453a357dd80fc58"
+dependencies = [
+ "thiserror",
 ]
