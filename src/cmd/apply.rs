@@ -1,6 +1,7 @@
 use std::collections::HashMap;
+use std::io::{BufReader, BufRead};
 use std::ffi::OsStr;
-use std::fs;
+use std::fs::File;
 use std::os::unix::ffi::OsStrExt;
 
 use camino::Utf8PathBuf;
@@ -9,6 +10,7 @@ use colored::Colorize;
 use log::{debug, error, trace};
 use serde::{Deserialize, Serialize};
 use sysinfo::{Signal, System};
+use yaml_split::DocumentIterator;
 
 use crate::defaults::{write_defaults_values, MacOSDefaults};
 use crate::errors::DefaultsError as E;
@@ -81,14 +83,30 @@ struct DefaultsConfig(HashMap<String, HashMap<String, plist::Value>>);
 
 pub fn apply_defaults(path: &Utf8PathBuf) -> Result<bool> {
     //
-    let s = fs::read_to_string(path).map_err(|e| E::FileRead {
+    let file = File::open(path).map_err(|e| E::FileRead {
         path: path.to_owned(),
         source: e,
     })?;
 
-    trace!("Task '{path}' contents: <<<{s}>>>");
+    let reader = BufReader::new(file);
 
-    let config: MacOSDefaults = serde_yaml::from_str(&s).map_err(|e| E::InvalidYaml {
+    trace!("Processing YAML documents from file: {}", path);
+
+    let mut any_changed = false;
+
+    for doc in DocumentIterator::new(reader) {
+        let doc = doc.map_err(|e| E::YamlSplitError {
+            path: path.to_owned(),
+            source: e,
+        })?;
+        any_changed |= process_yaml_document(doc.as_bytes(), path)?;
+    }
+
+    Ok(any_changed)
+}
+
+fn process_yaml_document(doc: impl BufRead, path: &Utf8PathBuf) -> Result<bool> {
+    let config: MacOSDefaults = serde_yaml::from_reader(doc).map_err(|e| E::InvalidYaml {
         path: path.to_owned(),
         source: e,
     })?;
@@ -104,26 +122,20 @@ pub fn apply_defaults(path: &Utf8PathBuf) -> Result<bool> {
         println!("  {} {}", "▶".green(), description.bold().white());
     }
 
-    let (passed, errors): (Vec<_>, Vec<_>) = defaults
-        .0
+    let results: Vec<_> = defaults.0
         .into_iter()
         .map(|(domain, prefs)| write_defaults_values(&domain, prefs, config.current_host))
-        .partition(Result::is_ok);
+        .collect();
 
-    debug!("Passed: {passed:?}");
-    debug!("Errored: {errors:?}");
+    let (passed, errors): (Vec<_>, Vec<_>) = results.into_iter().partition(Result::is_ok);
 
-    let changed = passed.iter().flatten().any(|&value| value);
+    let changed = passed.iter().any(|r| *r.as_ref().unwrap());
 
-    let errors: Vec<_> = errors.into_iter().map(Result::unwrap_err).collect();
-    let passed: Vec<_> = passed.into_iter().map(Result::unwrap).collect();
-
-    if changed && passed.into_iter().any(|r| r) {
+    if changed {
         if let Some(kill) = config.kill {
-            for process in &kill {
+            for process in kill {
                 println!("    {} Restarting: {}", "✖".blue(), process.white());
-
-                kill_process_by_name(process);
+                kill_process_by_name(&process);
             }
         }
     }
@@ -138,7 +150,9 @@ pub fn apply_defaults(path: &Utf8PathBuf) -> Result<bool> {
 
     let mut errors_iter = errors.into_iter();
 
-    Err(errors_iter.next().ok_or(E::UnexpectedNone)?).wrap_err_with(|| eyre!("{:?}", errors_iter.collect::<Vec<_>>()))
+    let first_error = errors_iter.next().ok_or(E::UnexpectedNone)??;
+
+    Err(eyre!("{:?}", errors_iter.collect::<Vec<_>>())).wrap_err(first_error)
 }
 
 fn kill_process_by_name(name: &str) {

@@ -47,4 +47,7 @@ pub enum DefaultsError {
 
     #[error("Eyre error.")]
     EyreError { source: color_eyre::Report },
+
+    #[error("failed to split YAML file {path}")]
+    YamlSplitError { path: Utf8PathBuf, source: yaml_split::YamlSplitError },
 }

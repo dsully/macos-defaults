@@ -88,6 +88,16 @@ data:
 
     # Export photos in vCards
     ABIncludePhotosInVCard: true
+---
+# Multiple yaml docs in single file.
+description: Dock
+
+kill: ["Dock"]
+
+data:
+  # Automatically hide and show the Dock
+  com.apple.dock:
+    autohide: true
 ```
 
 You may also use full paths to `.plist` files instead of domain names. This is the only way to set values in /Library/Preferences/.
