@@ -7,7 +7,7 @@ categories = [
   "os::macos-apis",
 ]
 description = "Defaults setting for macOS"
-edition = "2021"
+edition = "2024"
 homepage = "https://github.com/dsully/macos-defaults"
 keywords = [ "macos", "user", "defaults", "declarative", "yaml" ]
 license = "MIT"
@@ -17,30 +17,30 @@ repository = "https://github.com/dsully/macos-defaults"
 version = "0.2.0"
 
 [dependencies]
-camino = "1.1.9"
-clap = { version = "~4.5.17", features = [
+camino = "1.2.1"
+clap = { version = "~4.5.48", features = [
   "cargo",
   "color",
   "derive",
   "suggestions",
   "wrap_help",
 ] }
-clap-verbosity-flag = "2.2.1"
-clap_complete = "4.5.28"
-color-eyre = "0.6.3"
-colored = "2.1.0"
-dirs = "5.0.1"
+clap-verbosity-flag = "3.0.4"
+clap_complete = "4.5.58"
+color-eyre = "0.6.5"
+colored = "3.0.0"
+dirs = "6.0.0"
 duct = "0.13.7"
-env_logger = "0.11.5"
+env_logger = "0.11.8"
 hex = "0.4.3"
-itertools = "0.13.0"
-log = "0.4.22"
-plist = "1.7.0"
-serde = { version = "1.0.210", features = [ "derive" ] }
+itertools = "0.14.0"
+log = "0.4.28"
+plist = "1.8.0"
+serde = { version = "1.0.228", features = [ "derive" ] }
 serde_yaml = "0.9.34"
-shadow-rs = { version = "0.35.0", default-features = false }
-sysinfo = "0.31.4"
-thiserror = "1.0.63"
+shadow-rs = { version = "0.38.1", default-features = false }
+sysinfo = "0.33.1"
+thiserror = "2.0.17"
 yaml-rust = "0.4.5"
 yaml-split = "0.4.0"
 
@@ -48,7 +48,7 @@ yaml-split = "0.4.0"
 testresult = "0.4.1"
 
 [build-dependencies]
-shadow-rs = { version = "0.35.0", default-features = false }
+shadow-rs = { version = "0.38.1", default-features = false }
 
 [lints.clippy]
 pedantic = "deny"
