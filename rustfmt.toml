@@ -1,7 +1,7 @@
 # Unstable
-# blank_lines_lower_bound = 1
-# imports_granularity = "Module"
-
-edition = "2021"
-max_width = 160
+# blank_lines_lower_bound = 0
+edition = "2024"
+group_imports = "StdExternalCrate"
+imports_granularity = "Module"
+max_width = 180
 use_field_init_shorthand = true

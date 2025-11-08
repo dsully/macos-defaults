@@ -90,7 +90,7 @@ pub fn apply_defaults(path: &Utf8PathBuf) -> Result<bool> {
 
     let reader = BufReader::new(file);
 
-    trace!("Processing YAML documents from file: {}", path);
+    trace!("Processing YAML documents from file: {path}");
 
     let mut any_changed = false;
 
@@ -129,7 +129,7 @@ fn process_yaml_document(doc: impl BufRead, path: &Utf8PathBuf) -> Result<bool> 
 
     let (passed, errors): (Vec<_>, Vec<_>) = results.into_iter().partition(Result::is_ok);
 
-    let changed = passed.iter().any(|r| *r.as_ref().unwrap());
+    let changed = passed.iter().any(|r| matches!(r, Ok(true)));
 
     if changed {
         if let Some(kill) = config.kill {
@@ -157,7 +157,7 @@ fn process_yaml_document(doc: impl BufRead, path: &Utf8PathBuf) -> Result<bool> 
 
 fn kill_process_by_name(name: &str) {
     let mut sys = System::new();
-    sys.refresh_processes(sysinfo::ProcessesToUpdate::All);
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
 
     for process in sys.processes_by_exact_name(OsStr::from_bytes(name.as_bytes())) {
         debug!("Process running: {} {}", process.pid(), process.name().to_string_lossy());

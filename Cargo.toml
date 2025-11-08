@@ -1,5 +1,5 @@
 [package]
-authors = [ "Dan Sully <dan+github@sully.org>" ]
+authors = ["Dan Sully <dan+github@sully.org>"]
 build = "build.rs"
 categories = [
   "command-line-utilities",
@@ -9,49 +9,12 @@ categories = [
 description = "Defaults setting for macOS"
 edition = "2024"
 homepage = "https://github.com/dsully/macos-defaults"
-keywords = [ "macos", "user", "defaults", "declarative", "yaml" ]
+keywords = ["declarative", "defaults", "macos", "user", "yaml"]
 license = "MIT"
 name = "macos-defaults"
 readme = "README.md"
 repository = "https://github.com/dsully/macos-defaults"
-version = "0.2.0"
-
-[dependencies]
-camino = "1.2.1"
-clap = { version = "~4.5.48", features = [
-  "cargo",
-  "color",
-  "derive",
-  "suggestions",
-  "wrap_help",
-] }
-clap-verbosity-flag = "3.0.4"
-clap_complete = "4.5.58"
-color-eyre = "0.6.5"
-colored = "3.0.0"
-dirs = "6.0.0"
-duct = "0.13.7"
-env_logger = "0.11.8"
-hex = "0.4.3"
-itertools = "0.14.0"
-log = "0.4.28"
-plist = "1.8.0"
-serde = { version = "1.0.228", features = [ "derive" ] }
-serde_yaml = "0.9.34"
-shadow-rs = { version = "0.38.1", default-features = false }
-sysinfo = "0.33.1"
-thiserror = "2.0.17"
-yaml-rust = "0.4.5"
-yaml-split = "0.4.0"
-
-[dev-dependencies]
-testresult = "0.4.1"
-
-[build-dependencies]
-shadow-rs = { version = "0.38.1", default-features = false }
-
-[lints.clippy]
-pedantic = "deny"
+version = "0.3.0"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
@@ -60,35 +23,152 @@ cargo-dist-version = "0.22.1"
 # CI backends to support
 ci = "github"
 # The installers to generate for each app
-installers = [ "homebrew" ]
+installers = ["homebrew"]
 # A GitHub repo to push Homebrew formulas to
 tap = "dsully/homebrew-tap"
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = [ "aarch64-apple-darwin" ]
+targets = ["aarch64-apple-darwin"]
 # Publish jobs to run in CI
-publish-jobs = [ "homebrew" ]
+publish-jobs = ["homebrew"]
 # Which actions to run on pull requests
 pr-run-mode = "plan"
 
-  # Use Apple Silicon runners.
-  [workspace.metadata.dist.github-custom-runners]
-  aarch64-apple-darwin = "macos-14"
+# Use Apple Silicon runners.
+[workspace.metadata.dist.github-custom-runners]
+aarch64-apple-darwin = "macos-14"
 
-# The profile that 'cargo dist' will build with
-[profile.dist]
-codegen-units = 1
-debug = false
-incremental = false
-inherits = "release"
-lto = true
-opt-level = 3
-panic = "abort"
-strip = "none"
+[dependencies]
+camino = "1.2.1"
+clap = { version = "~4.5.51", features = [
+  "cargo",
+  "color",
+  "derive",
+  "suggestions",
+  "wrap_help",
+] }
+clap_complete = "4.5.60"
+clap-verbosity-flag = "3.0.4"
+color-eyre = "0.6.5"
+colored = "3.0.0"
+dirs = "6.0.0"
+duct = "1.1.0"
+env_logger = "0.11.8"
+hex = "0.4.3"
+itertools = "0.14.0"
+log = "0.4.28"
+plist = "1.8.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_yaml = "0.9.34"
+shadow-rs = { version = "1.4.0", default-features = false }
+sysinfo = "0.37.2"
+thiserror = "2.0.17"
+yaml-rust = "0.4.5"
+yaml-split = "0.4.0"
+
+[dev-dependencies]
+testresult = "0.4.1"
+
+[build-dependencies]
+shadow-rs = { version = "1.4.0", default-features = false, features = ["build"] }
 
 [profile.dev]
 debug = 0
 
 [profile.release]
-codegen-units = 1
 lto = true
 panic = "abort"
+codegen-units = 1
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+opt-level = 3
+debug = false
+strip = "none"
+lto = true
+panic = "abort"
+incremental = false
+codegen-units = 1
+
+# https://stackoverflow.com/a/74545562/81120
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+# Warn-level lints
+await_holding_lock = "warn"
+# Allowed lints
+cargo_common_metadata = { level = "allow", priority = 1 }
+char_lit_as_u8 = "warn"
+checked_conversions = "warn"
+complexity = { level = "deny", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+dbg_macro = "warn"
+debug_assert_with_mut_call = "warn"
+doc_markdown = { level = "allow", priority = 1 }
+empty_enum = "warn"
+empty_line_after_doc_comments = "allow"
+empty_line_after_outer_attr = "allow"
+enum_glob_use = "warn"
+expl_impl_clone_on_copy = "warn"
+explicit_deref_methods = "warn"
+explicit_into_iter_loop = "warn"
+fallible_impl_from = "warn"
+filter_map_next = "warn"
+flat_map_option = "warn"
+float_cmp_const = "warn"
+fn_params_excessive_bools = "warn"
+from_iter_instead_of_collect = "warn"
+if_let_mutex = "warn"
+implicit_clone = "warn"
+implicit_return = { level = "allow", priority = 1 }
+imprecise_flops = "warn"
+inefficient_to_string = "warn"
+invalid_upcast_comparisons = "warn"
+large_digit_groups = "warn"
+large_stack_arrays = "warn"
+large_types_passed_by_value = "warn"
+let_unit_value = "warn"
+linkedlist = "warn"
+lossy_float_literal = "warn"
+macro_use_imports = "warn"
+manual_ok_or = "warn"
+map_flatten = "warn"
+map_unwrap_or = "warn"
+match_same_arms = "warn"
+match_wild_err_arm = "warn"
+match_wildcard_for_single_variants = "warn"
+mem_forget = "warn"
+missing_enforced_import_renames = "warn"
+missing_errors_doc = { level = "allow", priority = 1 }
+missing_panics_doc = { level = "allow", priority = 1 }
+module_name_repetitions = { level = "allow", priority = 1 }
+mut_mut = "warn"
+mutex_integer = "warn"
+needless_borrow = "warn"
+needless_continue = "warn"
+needless_for_each = "warn"
+option_option = "warn"
+path_buf_push_overwrite = "warn"
+pedantic = { level = "deny", priority = -1 }
+perf = { level = "deny", priority = -1 }
+ptr_as_ptr = "warn"
+rc_mutex = "warn"
+ref_option_ref = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+same_functions_in_if_condition = "warn"
+semicolon_if_nothing_returned = "warn"
+single_match_else = "warn"
+string_add = "warn"
+string_add_assign = "warn"
+string_lit_as_bytes = "warn"
+struct_excessive_bools = "allow"
+style = { level = "deny", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+trait_duplication_in_bounds = "warn"
+unnested_or_patterns = "warn"
+unused_self = "warn"
+useless_transmute = "warn"
+verbose_file_reads = "warn"
+zero_sized_map_values = "warn"
+
+[lints.rust]
+rust_2018_idioms = { level = "deny", priority = -1 }
