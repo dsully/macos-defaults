@@ -16,27 +16,6 @@ readme = "README.md"
 repository = "https://github.com/dsully/macos-defaults"
 version = "0.3.0"
 
-# Config for 'cargo dist'
-[workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.22.1"
-# CI backends to support
-ci = "github"
-# The installers to generate for each app
-installers = ["homebrew"]
-# A GitHub repo to push Homebrew formulas to
-tap = "dsully/homebrew-tap"
-# Target platforms to build apps for (Rust target-triple syntax)
-targets = ["aarch64-apple-darwin"]
-# Publish jobs to run in CI
-publish-jobs = ["homebrew"]
-# Which actions to run on pull requests
-pr-run-mode = "plan"
-
-# Use Apple Silicon runners.
-[workspace.metadata.dist.github-custom-runners]
-aarch64-apple-darwin = "macos-14"
-
 [dependencies]
 camino = "1.2.1"
 clap = { version = "~4.5.51", features = [
