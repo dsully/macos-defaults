@@ -50,25 +50,6 @@ testresult = "0.4.1"
 [build-dependencies]
 shadow-rs = { version = "1.4.0", default-features = false, features = ["build"] }
 
-[profile.dev]
-debug = 0
-
-[profile.release]
-lto = true
-panic = "abort"
-codegen-units = 1
-
-# The profile that 'cargo dist' will build with
-[profile.dist]
-inherits = "release"
-opt-level = 3
-debug = false
-strip = "none"
-lto = true
-panic = "abort"
-incremental = false
-codegen-units = 1
-
 # https://stackoverflow.com/a/74545562/81120
 [lints.clippy]
 all = { level = "deny", priority = -1 }
@@ -83,7 +64,7 @@ correctness = { level = "deny", priority = -1 }
 dbg_macro = "warn"
 debug_assert_with_mut_call = "warn"
 doc_markdown = { level = "allow", priority = 1 }
-empty_enum = "warn"
+empty_enums = "warn"
 empty_line_after_doc_comments = "allow"
 empty_line_after_outer_attr = "allow"
 enum_glob_use = "warn"
@@ -151,3 +132,22 @@ zero_sized_map_values = "warn"
 
 [lints.rust]
 rust_2018_idioms = { level = "deny", priority = -1 }
+
+[profile.dev]
+debug = 0
+
+[profile.release]
+lto = true
+panic = "abort"
+codegen-units = 1
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+opt-level = 3
+debug = false
+strip = "none"
+lto = true
+panic = "abort"
+incremental = false
+codegen-units = 1

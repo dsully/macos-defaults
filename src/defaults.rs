@@ -8,7 +8,7 @@ use std::io::Read;
 use std::mem;
 
 use camino::{Utf8Path, Utf8PathBuf};
-use color_eyre::eyre::{eyre, Result};
+use color_eyre::eyre::{Result, eyre};
 use duct::cmd;
 use log::{debug, info, trace, warn};
 use plist::{Dictionary, Value};
@@ -187,7 +187,7 @@ fn is_binary(file: &Utf8Path) -> Result<bool, E> {
 }
 
 /// Write a `HashMap` of key-value pairs to a plist file.
-pub(super) fn write_defaults_values(domain: &str, mut prefs: HashMap<String, plist::Value>, current_host: bool) -> Result<bool> {
+pub(super) fn write_defaults_values(domain: &str, mut prefs: HashMap<String, plist::Value>, current_host: bool, dry_run: bool) -> Result<bool> {
     let plist_path = plist_path(domain, current_host)?;
 
     debug!("Plist path: {plist_path}");
@@ -257,7 +257,7 @@ pub(super) fn write_defaults_values(domain: &str, mut prefs: HashMap<String, pli
             .insert(key, new_value);
     }
 
-    if !values_changed {
+    if !values_changed || dry_run {
         return Ok(values_changed);
     }
 
@@ -312,7 +312,7 @@ fn write_plist(plist_path_exists: bool, plist_path: &Utf8Path, plist_value: &pli
             return Err(E::PlistWrite {
                 path: plist_path.to_path_buf(),
                 source: plist_error,
-            })
+            });
         }
     };
 
@@ -500,12 +500,13 @@ pub fn replace_data_in_plist(value: &mut Value) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use log::info;
     use testresult::TestResult;
 
-    use crate::defaults::deep_merge_dictionaries;
-
-    use super::{replace_ellipsis_array, NS_GLOBAL_DOMAIN};
+    use super::{NS_GLOBAL_DOMAIN, replace_ellipsis_array};
+    use crate::defaults::{deep_merge_dictionaries, write_defaults_values};
 
     #[test]
     fn plist_path_tests() -> TestResult {
@@ -532,10 +533,7 @@ mod tests {
         {
             let domain_path = super::plist_path(NS_GLOBAL_DOMAIN, true)?;
             let hardware_uuid = super::get_hardware_uuid()?;
-            assert_eq!(
-                home_dir.join(format!("Library/Preferences/ByHost/.GlobalPreferences.{hardware_uuid}.plist")),
-                domain_path
-            );
+            assert_eq!(home_dir.join(format!("Library/Preferences/ByHost/.GlobalPreferences.{hardware_uuid}.plist")), domain_path);
         }
 
         // Per-host sandboxed preference (`current_host` is true and the sandboxed plist exists).
@@ -587,6 +585,21 @@ mod tests {
         let yaml_string = serde_yaml::to_string(&value)?;
         info!("Yaml value: {yaml_string}");
         assert_eq!(expected_yaml, yaml_string);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_dry_run_does_not_create_plist() -> TestResult {
+        let domain = format!("org.macos-defaults.test.dry-run.{}", std::process::id());
+        let plist_path = super::plist_path(&domain, false)?;
+        assert!(!plist_path.exists());
+
+        let prefs = HashMap::from([("ExampleKey".to_owned(), plist::Value::from(true))]);
+        let changed = write_defaults_values(&domain, prefs, false, true)?;
+
+        assert!(changed);
+        assert!(!plist_path.exists());
 
         Ok(())
     }
@@ -698,11 +711,7 @@ mod tests {
 
         deep_merge_dictionaries(&mut new_value, Some(&old_value));
 
-        let expected = Dictionary::from_iter([(
-            "level_1",
-            Dictionary::from_iter([("level_2", Dictionary::from_iter([("baz", Value::from(90))]))]),
-        )])
-        .into();
+        let expected = Dictionary::from_iter([("level_1", Dictionary::from_iter([("level_2", Dictionary::from_iter([("baz", Value::from(90))]))]))]).into();
 
         assert_eq!(new_value, expected);
     }

@@ -7,7 +7,7 @@ use log::{debug, trace, warn};
 use plist::{Dictionary, Value};
 use yaml_rust::{YamlEmitter, YamlLoader};
 
-use crate::defaults::{get_plist_value_type, plist_path, replace_data_in_plist, MacOSDefaults, NS_GLOBAL_DOMAIN};
+use crate::defaults::{MacOSDefaults, NS_GLOBAL_DOMAIN, get_plist_value_type, plist_path, replace_data_in_plist};
 use crate::errors::DefaultsError as E;
 
 /// `dump` command.

@@ -1,18 +1,18 @@
 use std::collections::HashMap;
-use std::io::{BufReader, BufRead};
 use std::ffi::OsStr;
 use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::os::unix::ffi::OsStrExt;
 
 use camino::Utf8PathBuf;
-use color_eyre::eyre::{eyre, Result, WrapErr};
+use color_eyre::eyre::{Result, WrapErr, eyre};
 use colored::Colorize;
 use log::{debug, error, trace};
 use serde::{Deserialize, Serialize};
 use sysinfo::{Signal, System};
 use yaml_split::DocumentIterator;
 
-use crate::defaults::{write_defaults_values, MacOSDefaults};
+use crate::defaults::{MacOSDefaults, write_defaults_values};
 use crate::errors::DefaultsError as E;
 
 /*
@@ -81,12 +81,9 @@ data:
 #[derive(Debug, Default, Serialize, Deserialize)]
 struct DefaultsConfig(HashMap<String, HashMap<String, plist::Value>>);
 
-pub fn apply_defaults(path: &Utf8PathBuf) -> Result<bool> {
+pub fn apply_defaults(path: &Utf8PathBuf, dry_run: bool) -> Result<bool> {
     //
-    let file = File::open(path).map_err(|e| E::FileRead {
-        path: path.to_owned(),
-        source: e,
-    })?;
+    let file = File::open(path).map_err(|e| E::FileRead { path: path.to_owned(), source: e })?;
 
     let reader = BufReader::new(file);
 
@@ -95,21 +92,15 @@ pub fn apply_defaults(path: &Utf8PathBuf) -> Result<bool> {
     let mut any_changed = false;
 
     for doc in DocumentIterator::new(reader) {
-        let doc = doc.map_err(|e| E::YamlSplitError {
-            path: path.to_owned(),
-            source: e,
-        })?;
-        any_changed |= process_yaml_document(doc.as_bytes(), path)?;
+        let doc = doc.map_err(|e| E::YamlSplitError { path: path.to_owned(), source: e })?;
+        any_changed |= process_yaml_document(doc.as_bytes(), path, dry_run)?;
     }
 
     Ok(any_changed)
 }
 
-fn process_yaml_document(doc: impl BufRead, path: &Utf8PathBuf) -> Result<bool> {
-    let config: MacOSDefaults = serde_yaml::from_reader(doc).map_err(|e| E::InvalidYaml {
-        path: path.to_owned(),
-        source: e,
-    })?;
+fn process_yaml_document(doc: impl BufRead, path: &Utf8PathBuf, dry_run: bool) -> Result<bool> {
+    let config: MacOSDefaults = serde_yaml::from_reader(doc).map_err(|e| E::InvalidYaml { path: path.to_owned(), source: e })?;
 
     let maybe_data = config.data.ok_or_else(|| eyre!("Couldn't parse YAML data key in: {path}"))?;
 
@@ -122,16 +113,17 @@ fn process_yaml_document(doc: impl BufRead, path: &Utf8PathBuf) -> Result<bool> 
         println!("  {} {}", "▶".green(), description.bold().white());
     }
 
-    let results: Vec<_> = defaults.0
+    let results: Vec<_> = defaults
+        .0
         .into_iter()
-        .map(|(domain, prefs)| write_defaults_values(&domain, prefs, config.current_host))
+        .map(|(domain, prefs)| write_defaults_values(&domain, prefs, config.current_host, dry_run))
         .collect();
 
     let (passed, errors): (Vec<_>, Vec<_>) = results.into_iter().partition(Result::is_ok);
 
     let changed = passed.iter().any(|r| matches!(r, Ok(true)));
 
-    if changed {
+    if changed && !dry_run {
         if let Some(kill) = config.kill {
             for process in kill {
                 println!("    {} Restarting: {}", "✖".blue(), process.white());

@@ -12,13 +12,11 @@
     clippy::needless_raw_string_hashes
 )]
 
-use std::fs;
-use std::io;
+use std::{fs, io};
 
 use camino::Utf8PathBuf;
-use clap::crate_authors;
-use clap::{ArgGroup, CommandFactory, Parser, Subcommand, ValueHint};
-use clap_complete::{generate, Shell as CompletionShell};
+use clap::{ArgGroup, CommandFactory, Parser, Subcommand, ValueHint, crate_authors};
+use clap_complete::{Shell as CompletionShell, generate};
 use color_eyre::eyre::Result;
 use shadow_rs::shadow;
 
@@ -114,7 +112,7 @@ fn main() -> Result<()> {
             for p in process_path(path)? {
                 fs::metadata(&p).map_err(|e| E::FileRead { path: p.clone(), source: e })?;
 
-                if apply_defaults(&p)? {
+                if apply_defaults(&p, cli.dry_run)? {
                     changed = true;
                 }
             }
